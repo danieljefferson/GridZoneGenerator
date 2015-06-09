@@ -161,7 +161,7 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
     def disableAll(self):
         self.mirLineEdit.setEnabled(False)
         self.miLineEdit.setEnabled(False)
-        self.inomLineEdit.setEnabled(False)
+        self.indexLineEdit.setEnabled(False)
 
     @pyqtSlot(int)
     def on_scaleCombo_currentIndexChanged(self):

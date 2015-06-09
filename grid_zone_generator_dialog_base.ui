@@ -166,7 +166,11 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="mirLineEdit"/>
+            <widget class="QLineEdit" name="mirLineEdit">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
@@ -180,7 +184,11 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="miLineEdit"/>
+            <widget class="QLineEdit" name="miLineEdit">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
@@ -194,7 +202,11 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="indexLineEdit"/>
+            <widget class="QLineEdit" name="indexLineEdit">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
