@@ -1,33 +1,220 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>GridZoneGeneratorDialogBase</class>
- <widget class="QDialog" name="GridZoneGeneratorDialogBase" >
-  <property name="geometry" >
+ <widget class="QDialog" name="GridZoneGeneratorDialogBase">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>426</width>
+    <height>255</height>
    </rect>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>Grid Zone Generator</string>
   </property>
-  <widget class="QDialogButtonBox" name="button_box" >
-   <property name="geometry" >
-    <rect>
-     <x>30</x>
-     <y>240</y>
-     <width>341</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="orientation" >
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="standardButtons" >
-    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-   </property>
-  </widget>
+  <layout class="QGridLayout" name="gridLayout_3">
+   <item row="0" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Stop Scale</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="stopScaleCombo">
+       <item>
+        <property name="text">
+         <string>1000k</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>500k</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>250k</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>100k</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>50k</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>25k</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>10k</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>5k</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2k</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>1k</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Reference Data</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Scale</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="scaleCombo">
+          <item>
+           <property name="text">
+            <string>1000k</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>500k</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>250k</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>100k</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>50k</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>25k</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>10k</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>5k</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2k</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1k</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0">
+       <widget class="QGroupBox" name="groupBox_2">
+        <property name="title">
+         <string>Index Frame Selection</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>MIR</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="mirLineEdit"/>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>MI</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="miLineEdit"/>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Index</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="indexLineEdit"/>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QDialogButtonBox" name="button_box">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections>
@@ -37,13 +224,13 @@
    <receiver>GridZoneGeneratorDialogBase</receiver>
    <slot>accept()</slot>
    <hints>
-    <hint type="source_label" >
-     <x>248</x>
-     <y>254</y>
+    <hint type="sourcelabel">
+     <x>80</x>
+     <y>320</y>
     </hint>
-    <hint type="destination_label" >
-     <x>157</x>
-     <y>274</y>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
     </hint>
    </hints>
   </connection>
@@ -53,13 +240,13 @@
    <receiver>GridZoneGeneratorDialogBase</receiver>
    <slot>reject()</slot>
    <hints>
-    <hint type="source_label" >
-     <x>316</x>
-     <y>260</y>
+    <hint type="sourcelabel">
+     <x>80</x>
+     <y>320</y>
     </hint>
-    <hint type="destination_label" >
-     <x>286</x>
-     <y>274</y>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
     </hint>
    </hints>
   </connection>

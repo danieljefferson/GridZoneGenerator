@@ -59,7 +59,7 @@ class GridZoneGenerator:
                 QCoreApplication.installTranslator(self.translator)
 
         # Create the dialog (after translation) and keep reference
-        self.dlg = GridZoneGeneratorDialog()
+        self.dlg = GridZoneGeneratorDialog(self.iface)
 
         # Declare instance attributes
         self.actions = []

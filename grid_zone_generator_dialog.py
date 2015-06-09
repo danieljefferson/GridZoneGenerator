@@ -22,6 +22,7 @@
 """
 
 import os
+from map_index import UtmGrid
 
 from PyQt4 import QtGui, uic
 
@@ -30,7 +31,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
-    def __init__(self, parent=None):
+    def __init__(self, iface, parent=None):
         """Constructor."""
         super(GridZoneGeneratorDialog, self).__init__(parent)
         # Set up the user interface from Designer.
@@ -39,3 +40,8 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+        self.iface = iface
+        
+        self.utmgrid = UtmGrid()
+        
+       
