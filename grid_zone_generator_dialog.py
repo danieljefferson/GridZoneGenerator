@@ -24,7 +24,10 @@
 import os
 from map_index import UtmGrid
 
+from qgis.core import *
 from PyQt4 import QtGui, uic
+from PyQt4.QtCore import *
+from PyQt4.QtGui import QMessageBox
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'grid_zone_generator_dialog_base.ui'))
@@ -44,4 +47,143 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         
         self.utmgrid = UtmGrid()
         
-       
+    def setValidCharacters(self):
+        self.chars = []
+
+        chars = 'NS'
+        self.chars.append(chars)
+        chars = 'ABCDEFGHIJKLMNOPQRSTUVZ'
+        self.chars.append(chars)
+        chars = ['01','02','03','04','05','06','07','08','09','10',
+                   '11','12','13','14','15','16','17','18','19','20',
+                   '21','22','23','24','25','26','27','28','29','30',
+                   '31','32','33','34','35','36','37','38','39','40',
+                   '41','42','43','44','45','46','47','48','49','50',
+                   '51','52','53','54','55','56','57','58','59','60']
+        self.chars.append(chars)
+        chars = 'VXYZ'
+        self.chars.append(chars)
+        chars = 'ABCD'
+        self.chars.append(chars)
+        chars = ['I','II','III','IV','V','VI']
+        self.chars.append(chars)
+        chars = '1234'
+        self.chars.append(chars)
+        chars = ['NO','NE','SO','SE']
+        self.chars.append(chars)
+        chars = 'ABCDEF'
+        self.chars.append(chars)
+        chars = ['I','II','III','IV']
+        self.chars.append(chars)
+        chars = '123456'
+        self.chars.append(chars)
+        chars = 'ABCD'
+        self.chars.append(chars)
+        
+    def setMask(self):
+        if self.scaleCombo.currentText() == '1000k':
+            self.indexLineEdit.setInputMask('NN-NN')
+        elif self.scaleCombo.currentText() == '500k':
+            self.indexLineEdit.setInputMask('NN-NN-N')
+        elif self.scaleCombo.currentText() == '250k':
+            self.indexLineEdit.setInputMask('NN-NN-N-N')
+        elif self.scaleCombo.currentText() == '100k':
+            self.indexLineEdit.setInputMask('NN-NN-N-N-Nnn')
+        elif self.scaleCombo.currentText() == '50k':
+            self.indexLineEdit.setInputMask('NN-NN-N-N-Nnn-0')
+        elif self.scaleCombo.currentText() == '25k':
+            self.indexLineEdit.setInputMask('NN-NN-N-N-Nnn-0-NN')
+        elif self.scaleCombo.currentText() == '10k':
+            self.indexLineEdit.setInputMask('NN-NN-N-N-Nnn-0-NN-N')
+        elif self.scaleCombo.currentText() == '5k':
+            self.indexLineEdit.setInputMask('NN-NN-N-N-Nnn-0-NN-N-Nnn')
+        elif self.scaleCombo.currentText() == '2k':
+            self.indexLineEdit.setInputMask('NN-NN-N-N-Nnn-0-NN-N-Nnn-0')
+        elif self.scaleCombo.currentText() == '1k':
+            self.indexLineEdit.setInputMask('NN-NN-N-N-Nnn-0-NN-N-Nnn-0-N')
+            
+    def validateMI(self):
+        mi = self.indexLineEdit.text()
+        split = mi.split('-')
+        for i in range(len(split)):
+            word = str(split[i])
+            if len(word) == 0:
+                return False
+            if i == 0:
+                if word[0] not in self.chars[0]:
+                    print word
+                    return False
+                if word[1] not in self.chars[1]:
+                    print word
+                    return False
+            elif i == 1:
+                if word not in self.chars[2]:
+                    print word
+                    return False
+            elif i == 2:
+                if word not in self.chars[3]:
+                    print word
+                    return False
+            elif i == 3:
+                if word not in self.chars[4]:
+                    print word
+                    return False
+            elif i == 4:
+                if word not in self.chars[5]:
+                    print word
+                    return False
+            elif i == 5:
+                if word not in self.chars[6]:
+                    print word
+                    return False
+            elif i == 6:
+                if word not in self.chars[7]:
+                    print word
+                    return False
+            elif i == 7:
+                if word not in self.chars[8]:
+                    print word
+                    return False
+            elif i == 8:
+                if word not in self.chars[9]:
+                    print word
+                    return False
+            elif i == 9:
+                if word not in self.chars[10]:
+                    print word
+                    return False
+            elif i == 10:
+                if word not in self.chars[11]:
+                    print word
+                    return False
+        return True
+    
+    def disableAll(self):
+        self.mirLineEdit.setEnabled(False)
+        self.miLineEdit.setEnabled(False)
+        self.inomLineEdit.setEnabled(False)
+
+    @pyqtSlot(int)
+    def on_scaleCombo_currentIndexChanged(self):
+        self.setMask()
+
+    @pyqtSlot(bool)
+    def on_mirRadioButton_toggled(self, toggled):
+        if toggled:
+            self.mirLineEdit.setEnabled(True)
+        else:
+            self.mirLineEdit.setEnabled(False)
+
+    @pyqtSlot(bool)
+    def on_miRadioButton_toggled(self, toggled):
+        if toggled:
+            self.miLineEdit.setEnabled(True)
+        else:
+            self.miLineEdit.setEnabled(False)
+
+    @pyqtSlot(bool)
+    def on_indexRadioButton_toggled(self, toggled):
+        if toggled:
+            self.indexLineEdit.setEnabled(True)
+        else:
+            self.indexLineEdit.setEnabled(False)
