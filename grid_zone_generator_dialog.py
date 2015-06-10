@@ -222,3 +222,43 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
             self.indexLineEdit.setEnabled(True)
         else:
             self.indexLineEdit.setEnabled(False)
+      
+    @pyqtSlot()        
+    def on_button_box_accepted(self):
+        stopScale = int(self.stopScaleCombo.currentText().replace('k','')) 
+        scale = int(self.scaleCombo.currentText().replace('k',''))
+    
+        if stopScale > scale:
+            QMessageBox.warning(self, self.tr('Warning!'), self.tr('The stop scale denominator should not be bigger than \
+                                                                    the scale denominator!'))
+            return
+        
+        if not self.crsLineEdit.text():
+            QMessageBox.warning(self, self.tr('Warning!'), self.tr('A CRS must be specified!'))
+            
+            return
+        
+        if not self.validateMI():
+            QMessageBox.warning(self, self.tr('Warning!'), self.tr('Invalid Map Index!'))            
+            return
+            
+        layer = QgsVectorLayer('Multipolygon?crs=%s'% self.crs.authid(), self.tr('Grid Zones'), 'memory')
+        if not layer.isValid():
+            QMessageBox.warning(self, self.tr('Warning!'), self.tr('Problem loading memory layer!'))
+                
+        QgsMapLayerRegistry.instance().addMapLayer(layer)   
+        
+        provider = layer.dataProvider()  
+        provider.addAttributes([QgsField('map_index', QVariant.String)])
+        layer.updateFields()
+        
+        self.utmgrid.populateQgsLayer(self.indexLineEdit.text(), stopScale, layer)
+        
+        layer.updateExtents()
+        self.iface.mapCanvas().setExtent(layer.extent())
+        self.iface.mapCanvas().refresh()
+        
+        
+        
+        
+        
