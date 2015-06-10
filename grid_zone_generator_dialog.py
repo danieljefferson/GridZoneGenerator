@@ -242,23 +242,11 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
             QMessageBox.warning(self, self.tr('Warning!'), self.tr('Invalid Map Index!'))            
             return
             
-        tempLayer = QgsVectorLayer('Multipolygon?crs=%s'% self.crs.geographicCRSAuthId(), 'temp', 'memory')
-        if not tempLayer.isValid():
-            QMessageBox.warning(self, self.tr('Warning!'), self.tr('Problem loading memory layer!'))
-            return
-        provider = tempLayer.dataProvider()
-        provider.addAttributes([QgsField(self.tr('map_index'), QVariant.String)])
-        tempLayer.updateFields()
+        tempLayer = self.createGridLayer('temp', 'Multipolygon', self.crs.geographicCRSAuthId())
 
         self.utmgrid.populateQgsLayer(self.indexLineEdit.text(), stopScale, tempLayer)
         
-        layer = QgsVectorLayer('Multipolygon?crs=%s'% self.crs.authid(), self.tr('Grid Zones'), 'memory')
-        if not layer.isValid():
-            QMessageBox.warning(self, self.tr('Warning!'), self.tr('Problem loading memory layer!'))
-            return
-        provider = layer.dataProvider()
-        provider.addAttributes([QgsField(self.tr('map_index'), QVariant.String)])
-        layer.updateFields()
+        layer = self.createGridLayer('Grid Zones', 'Multipolygon', self.crs.authid())
         
         for feature in tempLayer.getFeatures():
             geom = feature.geometry()
@@ -275,6 +263,16 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         bbox = self.iface.mapCanvas().mapSettings().layerToMapCoordinates(layer, layer.extent())
         self.iface.mapCanvas().setExtent(bbox)
         self.iface.mapCanvas().refresh()
+        
+    def createGridLayer(self, name, layerType, crsAuthId):
+        layer = QgsVectorLayer('%s?crs=%s'% (layerType, crsAuthId), self.tr(name), 'memory')
+        if not layer.isValid():
+            QMessageBox.warning(self, self.tr('Warning!'), self.tr('Problem loading memory layer!'))
+            return
+        provider = layer.dataProvider()
+        provider.addAttributes([QgsField(self.tr('map_index'), QVariant.String)])
+        layer.updateFields()
+        return layer
         
     def reprojectGridZone(self, multipoly):
         crsSrc = QgsCoordinateReferenceSystem(self.crs.geographicCRSAuthId())
