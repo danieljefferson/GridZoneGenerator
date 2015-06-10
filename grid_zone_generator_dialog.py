@@ -56,6 +56,13 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
 
     @pyqtSlot()
     def on_button_box_accepted(self):
+        stopScale = int(self.stopScaleCombo.currentText().replace('k', ''))
+        scale = int(self.scaleCombo.currentText().replace('k', ''))
+        if stopScale > scale:
+            QMessageBox.warning(self, self.tr("Warning!"), self.tr('The stop scale denominator should be smaller than the \
+                                                                    scale denominator!'))
+            return
+
         if not self.validateMI():
             QMessageBox.warning(self, self.tr("Warning!"), self.tr('Map name index not valid!'))
             return
@@ -74,8 +81,6 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         pr.addAttributes([QgsField("map_index", QVariant.String)])
         # tell the vector layer to fetch changes from the provider
         self.vlayer.updateFields()
-
-        stopScale = int(self.stopScaleCombo.currentText().replace('k', ''))
 
         self.utmgrid.populateQgsLayer(self.indexLineEdit.text(), stopScale, self.vlayer)
 
