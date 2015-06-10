@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>426</width>
-    <height>255</height>
+    <width>494</width>
+    <height>361</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>Stop Scale</string>
+        <string>Stop Scale: </string>
        </property>
       </widget>
      </item>
@@ -80,6 +80,27 @@
     </layout>
    </item>
    <item row="1" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
+     <item>
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>CRS: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="crsLineEdit"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="crsButton">
+       <property name="text">
+        <string>Select CRS</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>Reference Data</string>
@@ -90,7 +111,7 @@
         <item>
          <widget class="QLabel" name="label_2">
           <property name="text">
-           <string>Scale</string>
+           <string>Scale: </string>
           </property>
          </widget>
         </item>
@@ -216,7 +237,7 @@
      </layout>
     </widget>
    </item>
-   <item row="2" column="0">
+   <item row="3" column="0">
     <widget class="QDialogButtonBox" name="button_box">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>

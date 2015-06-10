@@ -25,6 +25,7 @@ import os
 from map_index import UtmGrid
 
 from qgis.core import *
+from qgis.gui import QgsGenericProjectionSelector
 from PyQt4 import QtGui, uic
 from PyQt4.QtCore import *
 from PyQt4.QtGui import QMessageBox
@@ -46,7 +47,24 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         self.iface = iface
         
         self.utmgrid = UtmGrid()
-        
+
+        self.setMask()
+
+    @pyqtSlot(bool)
+    def on_crsButton_clicked(self):
+        projSelector = QgsGenericProjectionSelector()
+        message = 'Select the Spatial Reference System!'
+        projSelector.setMessage(theMessage=message)
+        projSelector.exec_()
+        try:
+            epsg = int(projSelector.selectedAuthId().split(':')[-1])
+            self.crs = QgsCoordinateReferenceSystem(epsg, QgsCoordinateReferenceSystem.EpsgCrsId)
+            if self.crs:
+                self.crsLineEdit.setText(self.crs.description())
+                self.crsLineEdit.setReadOnly(True)
+        except:
+            QMessageBox.warning(self, self.tr("Warning!"), self.tr(message))
+
     def setValidCharacters(self):
         self.chars = []
 
