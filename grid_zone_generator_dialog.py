@@ -242,23 +242,60 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
             QMessageBox.warning(self, self.tr('Warning!'), self.tr('Invalid Map Index!'))            
             return
             
+        tempLayer = QgsVectorLayer('Multipolygon?crs=%s'% self.crs.geographicCRSAuthId(), 'temp', 'memory')
+        if not tempLayer.isValid():
+            QMessageBox.warning(self, self.tr('Warning!'), self.tr('Problem loading memory layer!'))
+            return
+        provider = tempLayer.dataProvider()
+        provider.addAttributes([QgsField(self.tr('map_index'), QVariant.String)])
+        tempLayer.updateFields()
+
+        self.utmgrid.populateQgsLayer(self.indexLineEdit.text(), stopScale, tempLayer)
+        
         layer = QgsVectorLayer('Multipolygon?crs=%s'% self.crs.authid(), self.tr('Grid Zones'), 'memory')
         if not layer.isValid():
             QMessageBox.warning(self, self.tr('Warning!'), self.tr('Problem loading memory layer!'))
-                
-        QgsMapLayerRegistry.instance().addMapLayer(layer)   
-        
-        provider = layer.dataProvider()  
-        provider.addAttributes([QgsField('map_index', QVariant.String)])
+            return
+        provider = layer.dataProvider()
+        provider.addAttributes([QgsField(self.tr('map_index'), QVariant.String)])
         layer.updateFields()
         
-        self.utmgrid.populateQgsLayer(self.indexLineEdit.text(), stopScale, layer)
-        
+        for feature in tempLayer.getFeatures():
+            geom = feature.geometry()
+            reprojected = self.reprojectGridZone(geom)
+            self.insertGridZoneIntoQgsLayer(layer, reprojected, feature.attributes())
+
+        del tempLayer
+        tempLayer = None
+
+        QgsMapLayerRegistry.instance().addMapLayer(layer)   
+
         layer.updateExtents()
-        self.iface.mapCanvas().setExtent(layer.extent())
+        
+        bbox = self.iface.mapCanvas().mapSettings().layerToMapCoordinates(layer, layer.extent())
+        self.iface.mapCanvas().setExtent(bbox)
         self.iface.mapCanvas().refresh()
         
-        
-        
-        
-        
+    def reprojectGridZone(self, multipoly):
+        crsSrc = QgsCoordinateReferenceSystem(self.crs.geographicCRSAuthId())
+        coordinateTransformer = QgsCoordinateTransform(crsSrc, self.crs)
+        polyline = multipoly.asMultiPolygon()[0][0]
+        newPolyline = []
+        for point in polyline:
+            newPolyline.append(coordinateTransformer.transform(point))
+        qgsMultiPolygon = QgsGeometry.fromMultiPolygon([[newPolyline]])
+        return qgsMultiPolygon
+
+    def insertGridZoneIntoQgsLayer(self, layer, multipoly, attributes):
+        """Inserts the poly into layer
+        """
+        provider = layer.dataProvider()
+
+        #Creating the feature
+        feature = QgsFeature()
+        feature.setGeometry(multipoly)
+        feature.setAttributes(attributes)
+
+        # Adding the feature into the file
+        provider.addFeatures([feature])
+            
