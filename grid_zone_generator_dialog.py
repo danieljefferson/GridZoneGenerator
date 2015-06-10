@@ -45,6 +45,8 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
         self.iface = iface
+
+        self.crsLineEdit.setReadOnly(True)
         
         self.utmgrid = UtmGrid()
 
@@ -61,6 +63,10 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         if stopScale > scale:
             QMessageBox.warning(self, self.tr("Warning!"), self.tr('The stop scale denominator should be smaller than the \
                                                                     scale denominator!'))
+            return
+
+        if not self.crsLineEdit.text():
+            QMessageBox.warning(self, self.tr("Warning!"), self.tr('Select a CRS first!'))
             return
 
         if not self.validateMI():
@@ -217,7 +223,6 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
             self.crs = QgsCoordinateReferenceSystem(epsg, QgsCoordinateReferenceSystem.EpsgCrsId)
             if self.crs:
                 self.crsLineEdit.setText(self.crs.description())
-                self.crsLineEdit.setReadOnly(True)
         except:
             QMessageBox.warning(self, self.tr("Warning!"), self.tr(message))
 
