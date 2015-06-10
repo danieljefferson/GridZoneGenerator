@@ -56,46 +56,6 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
 
         self.vlayer = None
 
-    @pyqtSlot()
-    def on_button_box_accepted(self):
-        stopScale = int(self.stopScaleCombo.currentText().replace('k', ''))
-        scale = int(self.scaleCombo.currentText().replace('k', ''))
-        if stopScale > scale:
-            QMessageBox.warning(self, self.tr("Warning!"), self.tr('The stop scale denominator should be smaller than the \
-                                                                    scale denominator!'))
-            return
-
-        if not self.crsLineEdit.text():
-            QMessageBox.warning(self, self.tr("Warning!"), self.tr('Select a CRS first!'))
-            return
-
-        if not self.validateMI():
-            QMessageBox.warning(self, self.tr("Warning!"), self.tr('Map name index not valid!'))
-            return
-
-        if not self.vlayer:
-            # create layer
-            self.vlayer = QgsVectorLayer("Multipolygon?crs=%s" % self.crs.geographicCRSAuthId(), "Grid Zones", "memory")
-
-            QgsMapLayerRegistry.instance().addMapLayer(self.vlayer)
-            if not self.vlayer.isValid():
-                QgsMessageLog.logMessage(self.vlayer.error().summary(), "Grid Zones Calculator", QgsMessageLog.CRITICAL)
-
-        pr = self.vlayer.dataProvider()
-
-        # add fields
-        pr.addAttributes([QgsField("map_index", QVariant.String)])
-        # tell the vector layer to fetch changes from the provider
-        self.vlayer.updateFields()
-
-        self.utmgrid.populateQgsLayer(self.indexLineEdit.text(), stopScale, self.vlayer)
-
-        # update layer's extent when new features have been added
-        # because change of extent in provider is not propagated to the layer
-        self.vlayer.updateExtents()
-        self.iface.mapCanvas().setExtent(self.vlayer.extent())
-        self.iface.mapCanvas().refresh()
-
     def setValidCharacters(self):
         self.chars = []
 
