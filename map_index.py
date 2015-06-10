@@ -28,40 +28,40 @@ import string, os
 class UtmGrid:
     def __init__(self):
         """Constructor."""
-        self.scales=[1000,500,250,100,50,25,10,5,2,1]
-        nomen1000=['Nao Recorta']
-        nomen500=[['V','X'],['Y','Z']]
-        nomen250=[['A','B'],['C','D']]
-        nomen100=[['I','II','III'],['IV','V','VI']]
-        nomen50=[['1','2'],['3','4']]
-        nomen25=[['NO','NE'],['SO','SE']]
-        nomen10=[['A','B'],['C','D'],['E','F']]
-        nomen5=[['I','II'],['III','IV']]
-        nomen2=[['1', '2', '3'], ['4', '5', '6']]
-        nomen1=[['A','B'],['C','D']]
-        self.scaleText=[nomen1000,nomen500,nomen250,nomen100,nomen50,nomen25,nomen10,nomen5,nomen2,nomen1]
-        self.matrizRecorte=[]
-        self.spacingX=[]
-        self.spacingY=[]
-        self.stepsDone=0
-        self.stepsTotal=0
-        self.featureBuffer=[]
-        self.MIdict=[]
-        self.MIRdict=[]
+        self.scales = [1000,500,250,100,50,25,10,5,2,1]
+        nomen1000 = ['Nao Recorta']
+        nomen500 = [['V','X'],['Y','Z']]
+        nomen250 = [['A','B'],['C','D']]
+        nomen100 = [['I','II','III'],['IV','V','VI']]
+        nomen50 = [['1','2'],['3','4']]
+        nomen25 = [['NO','NE'],['SO','SE']]
+        nomen10 = [['A','B'],['C','D'],['E','F']]
+        nomen5 = [['I','II'],['III','IV']]
+        nomen2 = [['1', '2', '3'], ['4', '5', '6']]
+        nomen1 = [['A','B'],['C','D']]
+        self.scaleText = [nomen1000,nomen500,nomen250,nomen100,nomen50,nomen25,nomen10,nomen5,nomen2,nomen1]
+        self.matrizRecorte = []
+        self.spacingX = []
+        self.spacingY = []
+        self.stepsDone = 0
+        self.stepsTotal = 0
+        self.featureBuffer = []
+        self.MIdict = []
+        self.MIRdict = []
         
     def __del__(self):
         """Destructor."""
         pass
     
-    def findScaleText(self,scaleText,scaleId):
+    def findScaleText(self, scaleText, scaleId):
         """Get the scale matrix for the given scaleText and scaleId
         """
-        j=-1
-        for j,row in enumerate(self.scaleText[scaleId]):
-            if (scaleText in row):
+        j = -1
+        for j, row in enumerate(self.scaleText[scaleId]):
+            if scaleText in row:
                 i=row.index(scaleText)
                 break
-        return (i,len(self.scaleText[scaleId])-j-1) 
+        return (i, len(self.scaleText[scaleId])-j-1)
         
     def getScale(self, inomen):
         """Get scale for the given map index
@@ -79,31 +79,31 @@ class UtmGrid:
         """
         return self.scales.index(scale)
 
-    def getSpacingX(self,scale):
+    def getSpacingX(self, scale):
         """Get X spacing fot the given scale
         """
-        scaleId=self.scales.index(scale)
-        if (scaleId<0): return 0
-        if (len(self.spacingX)==0):
-            dx=6
-            self.spacingX=[dx]
-            for i in range(1,len(self.scaleText)):
-                subdivisions=len(self.scaleText[i][0])
-                dx/=float(subdivisions)
+        scaleId = self.scales.index(scale)
+        if scaleId < 0: return 0
+        if len(self.spacingX) == 0:
+            dx = 6
+            self.spacingX = [dx]
+            for i in range(1, len(self.scaleText)):
+                subdivisions = len(self.scaleText[i][0])
+                dx /= float(subdivisions)
                 self.spacingX.append(dx)
         return self.spacingX[scaleId]
     
-    def getSpacingY(self,scale): 
+    def getSpacingY(self, scale):
         """Get Y spacing fot the given scale
         """
-        scaleId=self.scales.index(scale)
-        if (scaleId<0): return 0
-        if (len(self.spacingY)==0):
-            dy=4
-            self.spacingY=[dy]
-            for i in range(1,len(self.scaleText)):
-                subdivisions=len(self.scaleText[i])
-                dy/=float(subdivisions)
+        scaleId = self.scales.index(scale)
+        if scaleId < 0: return 0
+        if len(self.spacingY) == 0:
+            dy = 4
+            self.spacingY = [dy]
+            for i in range(1, len(self.scaleText)):
+                subdivisions = len(self.scaleText[i])
+                dy /= float(subdivisions)
                 self.spacingY.append(dy)
         return self.spacingY[scaleId]
     
@@ -148,9 +148,9 @@ class UtmGrid:
     def getHemisphereMultiplier(self,inomen):
         """Check the hemisphere
         """
-        if (len(inomen) > 1):
+        if len(inomen) > 1:
             h = inomen[0].upper()
-            if (h=='S'):
+            if h == 'S':
                 return -1
             else:
                 return 1
@@ -158,19 +158,19 @@ class UtmGrid:
     def getLLCornerLatitude1kk(self,inomen):
         """Get lower left Latitude for 1:1.000.000 scale
         """
-        l=inomen[1].upper()
+        l = inomen[1].upper()
         y = 0.0;
-        operator=self.getHemisphereMultiplier(inomen)
-        verticalPosition=string.uppercase.index(l)
-        y=(y+4*verticalPosition)*operator
+        operator = self.getHemisphereMultiplier(inomen)
+        verticalPosition = string.uppercase.index(l)
+        y = (y+4*verticalPosition)*operator
         if (operator<0): y-=4
         return y
 
     def getLLCornerLongitude1kk(self,inomen):
         """Get lower left Longitude for 1:1.000.000 scale
         """
-        fuso=int(inomen[3:5])
-        x=0  
+        fuso = int(inomen[3:5])
+        x = 0
         if((fuso > 0) and (fuso <= 60)):
             x = (((fuso - 30)*6.0)-6.0)
         return x
@@ -178,18 +178,18 @@ class UtmGrid:
     def getLLCorner(self,inomen):
         """Get lower left coordinates for scale determined by the given map index
         """
-        x=self.getLLCornerLongitude1kk(inomen)
-        y=self.getLLCornerLatitude1kk(inomen)
-        inomenParts=inomen.upper().split('-')
+        x = self.getLLCornerLongitude1kk(inomen)
+        y = self.getLLCornerLatitude1kk(inomen)
+        inomenParts = inomen.upper().split('-')
         #Escala de 500.00
         for partId in range(2,len(inomenParts)):
-            scaleId=partId-1
-            dx=self.getSpacingX(self.scales[scaleId])
-            dy=self.getSpacingY(self.scales[scaleId])
-            scaleText=inomenParts[partId]
-            i,j=self.findScaleText(scaleText, partId-1)
-            x+=i*dx
-            y+=j*dy
+            scaleId = partId-1
+            dx = self.getSpacingX(self.scales[scaleId])
+            dy = self.getSpacingY(self.scales[scaleId])
+            scaleText = inomenParts[partId]
+            i,j = self.findScaleText(scaleText, partId-1)
+            x += i*dx
+            y += j*dy
         return (x,y)
     
     def computeNumberOfSteps(self,startScaleId,stopScaleId):
@@ -197,29 +197,9 @@ class UtmGrid:
         """
         steps=1
         for i in range(startScaleId+1,stopScaleId+1):
-            steps*=len(self.scaleText[i])*len(self.scaleText[i][0])
+            steps *= len(self.scaleText[i])*len(self.scaleText[i][0])
         return steps
-    
-    def createFrame(self, map_index, layer):
-        stopScale = self.getScale(map_index)
-        
-        # Enter in edit mode
-        layer.startEditing()
 
-        self.populateQgsLayer(map_index, stopScale, layer)
-
-        # Commiting changes        
-        layer.commitChanges()        
-    
-    def createFrame(self, map_index, layer, stopScale):
-        # Enter in edit mode
-        layer.startEditing()
-
-        self.populateQgsLayer(map_index, stopScale, layer)
-
-        # Commiting changes        
-        layer.commitChanges()
-        
     def getQgsPolygonFrame(self, map_index):
         """Particular case used to create frame polygon for the given
         map_index
@@ -239,8 +219,8 @@ class UtmGrid:
         #first run
         if (self.stepsTotal==0):
             self.stepsTotal=self.computeNumberOfSteps(self.getScaleIdFromScale(scale), self.getScaleIdFromScale(stopScale))
-            print "Total:",self.stepsTotal
-            self.stepsDone=0
+            print "Total:", self.stepsTotal
+            self.stepsDone = 0
         if scale == stopScale:
             (x, y) = self.getLLCorner(iNomen)
             dx = self.getSpacingX(stopScale)
@@ -249,7 +229,7 @@ class UtmGrid:
             
             self.insertFrameIntoQgsLayer(layer, poly, iNomen)
             
-            self.stepsDone+=1
+            self.stepsDone += 1
             print self.stepsDone, '/', self.stepsTotal
         else:
             scaleId = self.getScaleIdFromiNomen(iNomen)
@@ -268,9 +248,8 @@ class UtmGrid:
 
         #Creating the feature
         feature = QgsFeature()
-        feature.initAttributes(1)
-        feature.setAttribute(0, map_index)
         feature.setGeometry(poly)
+        feature.setAttributes([map_index])
 
         # Adding the feature into the file
         provider.addFeatures([feature])

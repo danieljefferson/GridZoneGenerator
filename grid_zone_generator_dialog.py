@@ -48,22 +48,38 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         
         self.utmgrid = UtmGrid()
 
+        self.setValidCharacters()
+
         self.setMask()
 
-    @pyqtSlot(bool)
-    def on_crsButton_clicked(self):
-        projSelector = QgsGenericProjectionSelector()
-        message = 'Select the Spatial Reference System!'
-        projSelector.setMessage(theMessage=message)
-        projSelector.exec_()
-        try:
-            epsg = int(projSelector.selectedAuthId().split(':')[-1])
-            self.crs = QgsCoordinateReferenceSystem(epsg, QgsCoordinateReferenceSystem.EpsgCrsId)
-            if self.crs:
-                self.crsLineEdit.setText(self.crs.description())
-                self.crsLineEdit.setReadOnly(True)
-        except:
-            QMessageBox.warning(self, self.tr("Warning!"), self.tr(message))
+        self.vlayer = None
+
+    @pyqtSlot()
+    def on_button_box_accepted(self):
+        if not self.vlayer:
+            # create layer
+            self.vlayer = QgsVectorLayer("Multipolygon?crs=epsg:%s" % self.crs.geographicCRSAuthId(), "Grid Zones", "memory")
+
+            QgsMapLayerRegistry.instance().addMapLayer(self.vlayer)
+            if not self.vlayer.isValid():
+                QgsMessageLog.logMessage(self.vlayer.error().summary(), "Grid Zones Calculator", QgsMessageLog.CRITICAL)
+
+        pr = self.vlayer.dataProvider()
+
+        # add fields
+        pr.addAttributes([QgsField("map_index", QVariant.String)])
+        # tell the vector layer to fetch changes from the provider
+        self.vlayer.updateFields()
+
+        stopScale = int(self.stopScaleCombo.currentText().replace('k', ''))
+
+        self.utmgrid.populateQgsLayer(self.indexLineEdit.text(), stopScale, self.vlayer)
+
+        # update layer's extent when new features have been added
+        # because change of extent in provider is not propagated to the layer
+        self.vlayer.updateExtents()
+        self.iface.mapCanvas().setExtent(self.vlayer.extent())
+        self.iface.mapCanvas().refresh()
 
     def setValidCharacters(self):
         self.chars = []
@@ -180,6 +196,33 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         self.mirLineEdit.setEnabled(False)
         self.miLineEdit.setEnabled(False)
         self.indexLineEdit.setEnabled(False)
+
+    @pyqtSlot(bool)
+    def on_crsButton_clicked(self):
+        projSelector = QgsGenericProjectionSelector()
+        message = 'Select the Spatial Reference System!'
+        projSelector.setMessage(theMessage=message)
+        projSelector.exec_()
+        try:
+            epsg = int(projSelector.selectedAuthId().split(':')[-1])
+            self.crs = QgsCoordinateReferenceSystem(epsg, QgsCoordinateReferenceSystem.EpsgCrsId)
+            if self.crs:
+                self.crsLineEdit.setText(self.crs.description())
+                self.crsLineEdit.setReadOnly(True)
+        except:
+            QMessageBox.warning(self, self.tr("Warning!"), self.tr(message))
+
+    @pyqtSlot(str)
+    def on_miLineEdit_textChanged(self,s):
+        if (s!=''):
+            self.index = self.utmgrid.getINomenFromMI(str(s))
+            self.indexLineEdit.setText(self.index)
+
+    @pyqtSlot(str)
+    def on_mirLineEdit_textChanged(self,s):
+        if (s!=''):
+            self.index = self.utmgrid.getINomenFromMIR(str(s))
+            self.indexLineEdit.setText(self.index)
 
     @pyqtSlot(int)
     def on_scaleCombo_currentIndexChanged(self):
