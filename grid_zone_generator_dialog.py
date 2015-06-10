@@ -56,9 +56,13 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
 
     @pyqtSlot()
     def on_button_box_accepted(self):
+        if not self.validateMI():
+            QMessageBox.warning(self, self.tr("Warning!"), self.tr('Map name index not valid!'))
+            return
+
         if not self.vlayer:
             # create layer
-            self.vlayer = QgsVectorLayer("Multipolygon?crs=epsg:%s" % self.crs.geographicCRSAuthId(), "Grid Zones", "memory")
+            self.vlayer = QgsVectorLayer("Multipolygon?crs=%s" % self.crs.geographicCRSAuthId(), "Grid Zones", "memory")
 
             QgsMapLayerRegistry.instance().addMapLayer(self.vlayer)
             if not self.vlayer.isValid():
