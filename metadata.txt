@@ -22,7 +22,7 @@ email=suporte.dsgtools@dsg.eb.mil.br
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=grid,zone,
+tags=grid,zone,utm,generator,brazilian,army,Exército,Brasileiro,DSG,Diretoria,Serviço,Geográfico
 
 homepage=https://github.com/danieljefferson/GridZoneGenerator
 tracker=https://github.com/danieljefferson/GridZoneGenerator
