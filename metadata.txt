@@ -9,7 +9,7 @@
 [general]
 name=Grid Zone Generator
 qgisMinimumVersion=2.6
-description=This plugin creates UTM grid zones for a specific scaie
+description=This plugin creates UTM grid zones for a specific scale
 version=1.0
 author=Brazilian Army - Geographic Service Bureau
 email=suporte.dsgtools@dsg.eb.mil.br
@@ -22,13 +22,13 @@ email=suporte.dsgtools@dsg.eb.mil.br
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=
+tags=grid,zone,
 
-homepage=
-tracker=
-repository=
+homepage=https://github.com/danieljefferson/GridZoneGenerator
+tracker=https://github.com/danieljefferson/GridZoneGenerator
+repository=https://github.com/danieljefferson/GridZoneGenerator
 category=Plugins
-icon=icon.png
+icon=grid.png
 # experimental flag
 experimental=False
 
