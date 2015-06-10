@@ -10,7 +10,7 @@
 name=Grid Zone Generator
 qgisMinimumVersion=2.6
 description=This plugin creates UTM grid zones for a specific scale
-version=1.0
+version=1.0.1
 author=Brazilian Army - Geographic Service Bureau
 email=suporte.dsgtools@dsg.eb.mil.br
 
@@ -19,7 +19,8 @@ email=suporte.dsgtools@dsg.eb.mil.br
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-# changelog=
+changelog=
+    1.0.1 - Translation in Brazilian Portuguese added.
 
 # Tags are comma separated with spaces allowed
 tags=grid,zone,utm,generator,brazilian,army,Exército,Brasileiro,DSG,Diretoria,Serviço,Geográfico
