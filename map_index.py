@@ -211,7 +211,7 @@ class UtmGrid:
         poly = self.makeQgsPolygon(x, y, x + dx, y + dy)
         return poly
     
-    def populateQgsLayer(self, iNomen, stopScale, layer):
+    def populateQgsLayer(self, iNomen, stopScale, layer, mi = ''):
         """Generic recursive method to create frame polygon for the given
         stopScale within the given map index (iNomen)
         """
@@ -227,7 +227,7 @@ class UtmGrid:
             dy = self.getSpacingY(stopScale)
             poly = self.makeQgsPolygon(x, y, x + dx, y + dy)
             
-            self.insertFrameIntoQgsLayer(layer, poly, iNomen)
+            self.insertFrameIntoQgsLayer(layer, poly, iNomen, mi)
             
             self.stepsDone += 1
             print self.stepsDone, '/', self.stepsTotal
@@ -239,9 +239,10 @@ class UtmGrid:
                 line = matrix[i]
                 for j in range(len(line)):
                     inomen2 = iNomen + '-' + line[j]
-                    self.populateQgsLayer(inomen2, stopScale, layer)
+                    mi2 = mi + '-' + line[j]
+                    self.populateQgsLayer(inomen2, stopScale, layer, mi2)
                     
-    def insertFrameIntoQgsLayer(self, layer, poly, map_index):
+    def insertFrameIntoQgsLayer(self, layer, poly, map_index, mi):
         """Inserts the poly into layer
         """
         provider = layer.dataProvider()
@@ -249,7 +250,7 @@ class UtmGrid:
         #Creating the feature
         feature = QgsFeature()
         feature.setGeometry(poly)
-        feature.setAttributes([map_index])
+        feature.setAttributes([map_index, mi])
 
         # Adding the feature into the file
         provider.addFeatures([feature])
@@ -283,6 +284,15 @@ class UtmGrid:
         otherParts = index.split('-')[1:]
         if (dict.has_key(key)):
             return dict[key]+'-'+string.join(otherParts,'-')
+        else:
+            return ''
+
+    def getMIFromINomen(self,inomen):
+        return self.getMI(self.getMIdict(), inomen)
+
+    def getMI(self, dict, inomen):
+        if inomen in dict.values():
+            return dict.keys()[dict.values().index(inomen)].lstrip('0')
         else:
             return ''
         

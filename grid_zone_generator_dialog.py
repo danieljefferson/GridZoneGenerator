@@ -187,13 +187,19 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
             QMessageBox.warning(self, self.tr("Warning!"), self.tr(message))
 
     @pyqtSlot(str)
-    def on_miLineEdit_textChanged(self,s):
+    def on_indexLineEdit_textEdited(self,s):
+        if (s!=''):
+            mi = self.utmgrid.getMIFromINomen(str(s))
+            self.miLineEdit.setText(mi)
+
+    @pyqtSlot(str)
+    def on_miLineEdit_textEdited(self,s):
         if (s!=''):
             self.index = self.utmgrid.getINomenFromMI(str(s))
             self.indexLineEdit.setText(self.index)
 
     @pyqtSlot(str)
-    def on_mirLineEdit_textChanged(self,s):
+    def on_mirLineEdit_textEdited(self,s):
         if (s!=''):
             self.index = self.utmgrid.getINomenFromMIR(str(s))
             self.indexLineEdit.setText(self.index)
@@ -244,7 +250,7 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
             
         tempLayer = self.createGridLayer('temp', 'Multipolygon', self.crs.geographicCRSAuthId())
 
-        self.utmgrid.populateQgsLayer(self.indexLineEdit.text(), stopScale, tempLayer)
+        self.utmgrid.populateQgsLayer(self.indexLineEdit.text(), stopScale, tempLayer, self.miLineEdit.text())
         
         layer = self.createGridLayer('Grid Zones', 'Multipolygon', self.crs.authid())
         
@@ -270,7 +276,7 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
             QMessageBox.warning(self, self.tr('Warning!'), self.tr('Problem loading memory layer!'))
             return
         provider = layer.dataProvider()
-        provider.addAttributes([QgsField(self.tr('map_index'), QVariant.String)])
+        provider.addAttributes([QgsField(self.tr('map_index'), QVariant.String), QgsField('mi', QVariant.String)])
         layer.updateFields()
         return layer
         
