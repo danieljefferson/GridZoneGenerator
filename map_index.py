@@ -24,11 +24,12 @@
 """
 from PyQt4.QtCore import QRunnable, QObject, pyqtSignal, pyqtSlot, QVariant
 from qgis.core import QgsPoint, QgsGeometry, QgsFeature, QgsVectorLayer, QgsField, QgsCoordinateReferenceSystem, QgsCoordinateTransform
+from qgis.core import QgsMapLayerRegistry, QgsVectorFileWriter
 import string, os
 
 class Aux(QObject):
     rangeCalculated = pyqtSignal(int)
-    processFinished = pyqtSignal(QgsVectorLayer)
+    processFinished = pyqtSignal()
     stepProcessed = pyqtSignal()
     errorOccurred = pyqtSignal(str)
     userCanceled = pyqtSignal()
@@ -252,10 +253,7 @@ class UtmGrid(QRunnable):
         scale = self.getScale(iNomen)            
         #first run
         if (self.stepsTotal==0):
-            file = open('/home/lclaudio/saida.txt', 'a')
             self.stepsTotal=self.computeNumberOfSteps(self.getScaleIdFromScale(scale), self.getScaleIdFromScale(stopScale))
-            file.write('passos = '+str(self.stepsTotal))
-            file.close()
             self.aux.rangeCalculated.emit(self.stepsTotal*2)
             self.stepsDone = 0
         if scale == stopScale:
@@ -333,11 +331,12 @@ class UtmGrid(QRunnable):
         else:
             return ''
         
-    def setParameters(self, index, stopScale, mi, crs):
+    def setParameters(self, index, stopScale, mi, crs, output):
         self.index = index
         self.stopScale = stopScale
         self.mi = mi
         self.crs = crs
+        self.output = output
 
     def createGridLayer(self, name, layerType, crsAuthId):
         layer = QgsVectorLayer('%s?crs=%s'% (layerType, crsAuthId), name, 'memory')
@@ -350,16 +349,12 @@ class UtmGrid(QRunnable):
         return layer
     
     def run(self):
-        print 'comeca'
         tempLayer = self.createGridLayer('temp', 'Multipolygon', self.crs.geographicCRSAuthId())
 
-        print 'faz temp'
         self.populateQgsLayer(self.index, self.stopScale, tempLayer, self.mi)
-        print 'feito temp'
-        
+
         layer = self.createGridLayer('Grid Zones', 'Multipolygon', self.crs.authid())
         
-        print 'faz layer'
         for feature in tempLayer.getFeatures():
             if self.stopped:
                 del tempLayer
@@ -371,22 +366,16 @@ class UtmGrid(QRunnable):
             reprojected = self.reprojectGridZone(geom)
             self.insertGridZoneIntoQgsLayer(layer, reprojected, feature.attributes())
             self.aux.stepProcessed.emit()
-        print 'fez layer'
 
         del tempLayer
         tempLayer = None
         
         self.aux.stepProcessed.emit()
-        
-        file = open('/home/lclaudio/saida.txt', 'a')
-        count = 0
-        for feature in layer.getFeatures():
-            count += 1
-        file.write('Molduras em layer = '+ str(count))
-        file.close()
-        
-#         self.aux.processFinished.emit(layer)
-        
+
+        QgsVectorFileWriter.writeAsVectorFormat(layer, self.output, "utf-8", None, "ESRI Shapefile")
+
+        self.aux.processFinished.emit()
+
     def reprojectGridZone(self, multipoly):
         crsSrc = QgsCoordinateReferenceSystem(self.crs.geographicCRSAuthId())
         coordinateTransformer = QgsCoordinateTransform(crsSrc, self.crs)

@@ -28,7 +28,7 @@ from qgis.core import *
 from qgis.gui import QgsGenericProjectionSelector
 from PyQt4 import QtGui, uic
 from PyQt4.QtCore import pyqtSlot, QThreadPool, Qt
-from PyQt4.QtGui import QMessageBox
+from PyQt4.QtGui import QMessageBox, QFileDialog
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'grid_zone_generator_dialog_base.ui'))
@@ -228,6 +228,11 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
             self.indexLineEdit.setEnabled(True)
         else:
             self.indexLineEdit.setEnabled(False)
+
+    @pyqtSlot(bool)
+    def on_saveButton_clicked(self):
+        fileName = QFileDialog.getSaveFileName(parent=self, caption=self.tr('Save Output File'), filter='Shapefile (*.shp)')
+        self.saveEdit.setText(fileName)
       
     @pyqtSlot()        
     def on_button_box_accepted(self):
@@ -238,19 +243,19 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
             QMessageBox.warning(self, self.tr('Warning!'), self.tr('The stop scale denominator should not be bigger than \
                                                                     the scale denominator!'))
             return
-        
+        if not self.saveEdit.text():
+            QMessageBox.warning(self, self.tr('Warning!'), self.tr('A output file must be specified!'))
+            return
         if not self.crsLineEdit.text():
             QMessageBox.warning(self, self.tr('Warning!'), self.tr('A CRS must be specified!'))
-            
             return
-        
         if not self.validateMI():
             QMessageBox.warning(self, self.tr('Warning!'), self.tr('Invalid Map Index!'))            
             return
         
         # Initiating processing
         gridThread = UtmGrid()
-        gridThread.setParameters(self.indexLineEdit.text(), stopScale, self.miLineEdit.text(), self.crs)
+        gridThread.setParameters(self.indexLineEdit.text(), stopScale, self.miLineEdit.text(), self.crs, self.saveEdit.text())
         # Connecting end signal
         gridThread.aux.processFinished.connect(self.finishProcess)
         gridThread.aux.rangeCalculated.connect(self.setRange)
@@ -276,13 +281,17 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
     def updateProgress(self):
         self.progressBar.setValue(self.progressBar.value() + 1)
         
-    def finishProcess(self, layer):
+    def finishProcess(self):
         self.progressBar.setValue(self.progressBar.maximum())
-        
-        QgsMapLayerRegistry.instance().addMapLayer(layer)   
+
+        layer = self.iface.addVectorLayer(self.saveEdit.text(), 'Grid', 'ogr')
+        if layer:
+            self.iface.setActiveLayer(layer)
 
         layer.updateExtents()
-        
+
         bbox = self.iface.mapCanvas().mapSettings().layerToMapCoordinates(layer, layer.extent())
         self.iface.mapCanvas().setExtent(bbox)
         self.iface.mapCanvas().refresh()
+
+        QMessageBox.information(self, self.tr('Success!'), self.tr('Grid Created successfully!'))
