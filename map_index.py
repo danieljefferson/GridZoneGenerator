@@ -252,7 +252,10 @@ class UtmGrid(QRunnable):
         scale = self.getScale(iNomen)            
         #first run
         if (self.stepsTotal==0):
+            file = open('/home/lclaudio/saida.txt', 'a')
             self.stepsTotal=self.computeNumberOfSteps(self.getScaleIdFromScale(scale), self.getScaleIdFromScale(stopScale))
+            file.write('passos = '+str(self.stepsTotal))
+            file.close()
             self.aux.rangeCalculated.emit(self.stepsTotal*2)
             self.stepsDone = 0
         if scale == stopScale:
@@ -372,6 +375,15 @@ class UtmGrid(QRunnable):
 
         del tempLayer
         tempLayer = None
+        
+        self.aux.stepProcessed.emit()
+        
+        file = open('/home/lclaudio/saida.txt', 'a')
+        count = 0
+        for feature in layer.getFeatures():
+            count += 1
+        file.write('Molduras em layer = '+ str(count))
+        file.close()
         
 #         self.aux.processFinished.emit(layer)
         

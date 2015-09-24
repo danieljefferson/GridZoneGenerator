@@ -252,10 +252,10 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         gridThread = UtmGrid()
         gridThread.setParameters(self.indexLineEdit.text(), stopScale, self.miLineEdit.text(), self.crs)
         # Connecting end signal
-        gridThread.aux.processFinished.connect(self.processFinished)
-        gridThread.aux.rangeCalculated.connect(self.rangeCalculated)
-        gridThread.aux.errorOccurred.connect(self.errorOccurred)
-        gridThread.aux.stepProcessed.connect(self.stepProcessed)
+        gridThread.aux.processFinished.connect(self.finishProcess)
+        gridThread.aux.rangeCalculated.connect(self.setRange)
+        gridThread.aux.errorOccurred.connect(self.showError)
+        gridThread.aux.stepProcessed.connect(self.updateProgress)
         # Setting the progress bar
         self.progressMessageBar = self.iface.messageBar().createMessage(self.tr('Generating grid, please wait...'))
         self.progressBar = QtGui.QProgressBar()
@@ -267,28 +267,16 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         # Starting process
         self.threadpool.start(gridThread)
         
-    def rangeCalculated(self, maximum):
+    def setRange(self, maximum):
         self.progressBar.setRange(0, maximum)
         
-    def errorOccurred(self, msg):
-        print 'erro'
-        file = open('/home/lclaudio/saida.txt', 'a')
-        file.write('erroo\n')
-        file.close()
+    def showError(self, msg):
         QMessageBox.warning(self, self.tr('Warning!'), msg)
         
-    def stepProcessed(self):
-        print 'passo feito'
-        file = open('/home/lclaudio/saida.txt', 'a')
-        file.write('passo feito\n')
-        file.close()
+    def updateProgress(self):
         self.progressBar.setValue(self.progressBar.value() + 1)
         
-    def processFinished(self, layer):
-        print 'fim'
-        file = open('/home/lclaudio/saida.txt', 'a')
-        file.write('fim\n')
-        file.close()
+    def finishProcess(self, layer):
         self.progressBar.setValue(self.progressBar.maximum())
         
         QgsMapLayerRegistry.instance().addMapLayer(layer)   
