@@ -27,7 +27,7 @@ from map_index import UtmGrid
 from qgis.core import *
 from qgis.gui import QgsGenericProjectionSelector
 from PyQt4 import QtGui, uic
-from PyQt4.QtCore import *
+from PyQt4.QtCore import pyqtSlot, QThreadPool, Qt
 from PyQt4.QtGui import QMessageBox
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -54,7 +54,7 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
 
         self.setMask()
 
-        self.vlayer = None
+        self.threadpool = QThreadPool()
 
     def setValidCharacters(self):
         self.chars = []
@@ -247,21 +247,50 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         if not self.validateMI():
             QMessageBox.warning(self, self.tr('Warning!'), self.tr('Invalid Map Index!'))            
             return
-            
-        tempLayer = self.createGridLayer('temp', 'Multipolygon', self.crs.geographicCRSAuthId())
-
-        self.utmgrid.populateQgsLayer(self.indexLineEdit.text(), stopScale, tempLayer, self.miLineEdit.text())
         
-        layer = self.createGridLayer('Grid Zones', 'Multipolygon', self.crs.authid())
+        # Initiating processing
+        gridThread = UtmGrid()
+        gridThread.setParameters(self.indexLineEdit.text(), stopScale, self.miLineEdit.text(), self.crs)
+        # Connecting end signal
+        gridThread.aux.processFinished.connect(self.processFinished)
+        gridThread.aux.rangeCalculated.connect(self.rangeCalculated)
+        gridThread.aux.errorOccurred.connect(self.errorOccurred)
+        gridThread.aux.stepProcessed.connect(self.stepProcessed)
+        # Setting the progress bar
+        self.progressMessageBar = self.iface.messageBar().createMessage(self.tr('Generating grid, please wait...'))
+        self.progressBar = QtGui.QProgressBar()
+        self.progressBar.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
+        self.progressMessageBar.layout().addWidget(self.progressBar)
+        self.iface.messageBar().pushWidget(self.progressMessageBar, self.iface.messageBar().INFO)
+        self.progressBar.setRange(0, 0)
+        self.progressMessageBar.destroyed.connect(gridThread.aux.cancel)
+        # Starting process
+        self.threadpool.start(gridThread)
         
-        for feature in tempLayer.getFeatures():
-            geom = feature.geometry()
-            reprojected = self.reprojectGridZone(geom)
-            self.insertGridZoneIntoQgsLayer(layer, reprojected, feature.attributes())
-
-        del tempLayer
-        tempLayer = None
-
+    def rangeCalculated(self, maximum):
+        self.progressBar.setRange(0, maximum)
+        
+    def errorOccurred(self, msg):
+        print 'erro'
+        file = open('/home/lclaudio/saida.txt', 'a')
+        file.write('erroo\n')
+        file.close()
+        QMessageBox.warning(self, self.tr('Warning!'), msg)
+        
+    def stepProcessed(self):
+        print 'passo feito'
+        file = open('/home/lclaudio/saida.txt', 'a')
+        file.write('passo feito\n')
+        file.close()
+        self.progressBar.setValue(self.progressBar.value() + 1)
+        
+    def processFinished(self, layer):
+        print 'fim'
+        file = open('/home/lclaudio/saida.txt', 'a')
+        file.write('fim\n')
+        file.close()
+        self.progressBar.setValue(self.progressBar.maximum())
+        
         QgsMapLayerRegistry.instance().addMapLayer(layer)   
 
         layer.updateExtents()
@@ -269,37 +298,3 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         bbox = self.iface.mapCanvas().mapSettings().layerToMapCoordinates(layer, layer.extent())
         self.iface.mapCanvas().setExtent(bbox)
         self.iface.mapCanvas().refresh()
-        
-    def createGridLayer(self, name, layerType, crsAuthId):
-        layer = QgsVectorLayer('%s?crs=%s'% (layerType, crsAuthId), self.tr(name), 'memory')
-        if not layer.isValid():
-            QMessageBox.warning(self, self.tr('Warning!'), self.tr('Problem loading memory layer!'))
-            return
-        provider = layer.dataProvider()
-        provider.addAttributes([QgsField(self.tr('map_index'), QVariant.String), QgsField('mi', QVariant.String)])
-        layer.updateFields()
-        return layer
-        
-    def reprojectGridZone(self, multipoly):
-        crsSrc = QgsCoordinateReferenceSystem(self.crs.geographicCRSAuthId())
-        coordinateTransformer = QgsCoordinateTransform(crsSrc, self.crs)
-        polyline = multipoly.asMultiPolygon()[0][0]
-        newPolyline = []
-        for point in polyline:
-            newPolyline.append(coordinateTransformer.transform(point))
-        qgsMultiPolygon = QgsGeometry.fromMultiPolygon([[newPolyline]])
-        return qgsMultiPolygon
-
-    def insertGridZoneIntoQgsLayer(self, layer, multipoly, attributes):
-        """Inserts the poly into layer
-        """
-        provider = layer.dataProvider()
-
-        #Creating the feature
-        feature = QgsFeature()
-        feature.setGeometry(multipoly)
-        feature.setAttributes(attributes)
-
-        # Adding the feature into the file
-        provider.addFeatures([feature])
-            

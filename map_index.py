@@ -22,12 +22,37 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.core import QgsPoint, QgsGeometry, QgsFeature
+from PyQt4.QtCore import QRunnable, QObject, pyqtSignal, pyqtSlot, QVariant
+from qgis.core import QgsPoint, QgsGeometry, QgsFeature, QgsVectorLayer, QgsField, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 import string, os
 
-class UtmGrid:
+class Aux(QObject):
+    rangeCalculated = pyqtSignal(int)
+    processFinished = pyqtSignal(QgsVectorLayer)
+    stepProcessed = pyqtSignal()
+    errorOccurred = pyqtSignal(str)
+    userCanceled = pyqtSignal()
+
+    def __init__(self, thread):
+        super(Aux, self).__init__()
+
+        self.thread = thread
+        
+    def getMemoryLayerErrorMessage(self):
+        return self.tr('Problem loading memory layer!')
+
+    def getIndexFieldName(self):
+        return self.tr('map_index')
+
+    @pyqtSlot()
+    def cancel(self):
+        self.thread.stop()
+
+class UtmGrid(QRunnable):
     def __init__(self):
         """Constructor."""
+        super(UtmGrid, self).__init__()
+        
         self.scales = [1000,500,250,100,50,25,10,5,2,1]
         nomen1000 = ['Nao Recorta']
         nomen500 = [['V','X'],['Y','Z']]
@@ -49,9 +74,12 @@ class UtmGrid:
         self.MIdict = []
         self.MIRdict = []
         
-    def __del__(self):
-        """Destructor."""
-        pass
+        self.aux = Aux(self)
+
+        self.stopped = False
+
+    def stop(self):
+        self.stopped = True
     
     def findScaleText(self, scaleText, scaleId):
         """Get the scale matrix for the given scaleText and scaleId
@@ -215,11 +243,17 @@ class UtmGrid:
         """Generic recursive method to create frame polygon for the given
         stopScale within the given map index (iNomen)
         """
+        if self.stopped:
+            del layer
+            layer = None
+            self.aux.userCanceled.emit()
+            return
+
         scale = self.getScale(iNomen)            
         #first run
         if (self.stepsTotal==0):
             self.stepsTotal=self.computeNumberOfSteps(self.getScaleIdFromScale(scale), self.getScaleIdFromScale(stopScale))
-            print "Total:", self.stepsTotal
+            self.aux.rangeCalculated.emit(self.stepsTotal*2)
             self.stepsDone = 0
         if scale == stopScale:
             (x, y) = self.getLLCorner(iNomen)
@@ -230,7 +264,7 @@ class UtmGrid:
             self.insertFrameIntoQgsLayer(layer, poly, iNomen, mi)
             
             self.stepsDone += 1
-            print self.stepsDone, '/', self.stepsTotal
+            self.aux.stepProcessed.emit()
         else:
             scaleId = self.getScaleIdFromiNomen(iNomen)
             matrix = self.scaleText[ scaleId+1 ]
@@ -296,13 +330,71 @@ class UtmGrid:
         else:
             return ''
         
-if (__name__=="__main__"):
-    test=UtmGrid()
-    mi="2895-1"
-    inomen=test.getINomenFromMI(mi)
-    print 'Working test:',inomen,'.'
-    mi='teste'
-    inomen=test.getINomenFromMI(mi)
-    print 'Not working test:',inomen,'.'
-    #print test.getQgsPolygonFrame(inomen).exportToWkt()
+    def setParameters(self, index, stopScale, mi, crs):
+        self.index = index
+        self.stopScale = stopScale
+        self.mi = mi
+        self.crs = crs
+
+    def createGridLayer(self, name, layerType, crsAuthId):
+        layer = QgsVectorLayer('%s?crs=%s'% (layerType, crsAuthId), name, 'memory')
+        if not layer.isValid():
+            self.aux.errorOccurred.emit(self.aux.getMemoryLayerErrorMessage())
+            return
+        provider = layer.dataProvider()
+        provider.addAttributes([QgsField(self.aux.getIndexFieldName(), QVariant.String), QgsField('mi', QVariant.String)])
+        layer.updateFields()
+        return layer
     
+    def run(self):
+        print 'comeca'
+        tempLayer = self.createGridLayer('temp', 'Multipolygon', self.crs.geographicCRSAuthId())
+
+        print 'faz temp'
+        self.populateQgsLayer(self.index, self.stopScale, tempLayer, self.mi)
+        print 'feito temp'
+        
+        layer = self.createGridLayer('Grid Zones', 'Multipolygon', self.crs.authid())
+        
+        print 'faz layer'
+        for feature in tempLayer.getFeatures():
+            if self.stopped:
+                del tempLayer
+                tempLayer = None
+                self.aux.userCanceled.emit()
+                return
+
+            geom = feature.geometry()
+            reprojected = self.reprojectGridZone(geom)
+            self.insertGridZoneIntoQgsLayer(layer, reprojected, feature.attributes())
+            self.aux.stepProcessed.emit()
+        print 'fez layer'
+
+        del tempLayer
+        tempLayer = None
+        
+#         self.aux.processFinished.emit(layer)
+        
+    def reprojectGridZone(self, multipoly):
+        crsSrc = QgsCoordinateReferenceSystem(self.crs.geographicCRSAuthId())
+        coordinateTransformer = QgsCoordinateTransform(crsSrc, self.crs)
+        polyline = multipoly.asMultiPolygon()[0][0]
+        newPolyline = []
+        for point in polyline:
+            newPolyline.append(coordinateTransformer.transform(point))
+        qgsMultiPolygon = QgsGeometry.fromMultiPolygon([[newPolyline]])
+        return qgsMultiPolygon
+
+    def insertGridZoneIntoQgsLayer(self, layer, multipoly, attributes):
+        """Inserts the poly into layer
+        """
+        provider = layer.dataProvider()
+
+        #Creating the feature
+        feature = QgsFeature()
+        feature.setGeometry(multipoly)
+        feature.setAttributes(attributes)
+
+        # Adding the feature into the file
+        provider.addFeatures([feature])
+        
