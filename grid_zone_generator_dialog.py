@@ -243,7 +243,7 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
             QMessageBox.warning(self, self.tr('Warning!'), self.tr('The stop scale denominator should not be bigger than \
                                                                     the scale denominator!'))
             return
-        if not self.saveEdit.text():
+        if self.createShapeBox.isChecked() and not self.saveEdit.text():
             QMessageBox.warning(self, self.tr('Warning!'), self.tr('A output file must be specified!'))
             return
         if not self.crsLineEdit.text():
@@ -255,7 +255,13 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         
         # Initiating processing
         gridThread = UtmGrid()
-        gridThread.setParameters(self.indexLineEdit.text(), stopScale, self.miLineEdit.text(), self.crs, self.saveEdit.text())
+        
+        if self.createShapeBox.isChecked():
+            self.layer = None
+        else:
+            self.layer = gridThread.createGridLayer(self.tr('Grid Zones'), 'Multipolygon', self.crs.authid())
+            
+        gridThread.setParameters(self.indexLineEdit.text(), stopScale, self.miLineEdit.text(), self.crs, self.saveEdit.text(), self.layer)
         # Connecting end signal
         gridThread.aux.processFinished.connect(self.finishProcess)
         gridThread.aux.rangeCalculated.connect(self.setRange)
@@ -283,15 +289,23 @@ class GridZoneGeneratorDialog(QtGui.QDialog, FORM_CLASS):
         
     def finishProcess(self):
         self.progressBar.setValue(self.progressBar.maximum())
-
-        layer = self.iface.addVectorLayer(self.saveEdit.text(), 'Grid', 'ogr')
+        
+        if self.createShapeBox.isChecked():
+            layer = self.iface.addVectorLayer(self.saveEdit.text(), self.tr('Grid Zones'), 'ogr')
+            self.updateMapCanvas(layer)
+        else:
+            QgsMapLayerRegistry.instance().addMapLayer(self.layer)
+            self.updateMapCanvas(self.layer)
+            
+        QMessageBox.information(self, self.tr('Success!'), self.tr('Grid Created successfully!'))
+        
+    def updateMapCanvas(self, layer):
         if layer:
             self.iface.setActiveLayer(layer)
-
-        layer.updateExtents()
-
+            
+        layer.updateExtents() 
+        
         bbox = self.iface.mapCanvas().mapSettings().layerToMapCoordinates(layer, layer.extent())
         self.iface.mapCanvas().setExtent(bbox)
         self.iface.mapCanvas().refresh()
-
-        QMessageBox.information(self, self.tr('Success!'), self.tr('Grid Created successfully!'))
+        

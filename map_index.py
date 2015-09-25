@@ -331,12 +331,13 @@ class UtmGrid(QRunnable):
         else:
             return ''
         
-    def setParameters(self, index, stopScale, mi, crs, output):
+    def setParameters(self, index, stopScale, mi, crs, output, layer = None):
         self.index = index
         self.stopScale = stopScale
         self.mi = mi
         self.crs = crs
         self.output = output
+        self.layer = layer
 
     def createGridLayer(self, name, layerType, crsAuthId):
         layer = QgsVectorLayer('%s?crs=%s'% (layerType, crsAuthId), name, 'memory')
@@ -352,8 +353,11 @@ class UtmGrid(QRunnable):
         tempLayer = self.createGridLayer('temp', 'Multipolygon', self.crs.geographicCRSAuthId())
 
         self.populateQgsLayer(self.index, self.stopScale, tempLayer, self.mi)
-
-        layer = self.createGridLayer('Grid Zones', 'Multipolygon', self.crs.authid())
+        
+        useMemory = True
+        if not self.layer:
+            useMemory = False
+            self.layer = self.createGridLayer('Grid Zones', 'Multipolygon', self.crs.authid())
         
         for feature in tempLayer.getFeatures():
             if self.stopped:
@@ -364,7 +368,7 @@ class UtmGrid(QRunnable):
 
             geom = feature.geometry()
             reprojected = self.reprojectGridZone(geom)
-            self.insertGridZoneIntoQgsLayer(layer, reprojected, feature.attributes())
+            self.insertGridZoneIntoQgsLayer(self.layer, reprojected, feature.attributes())
             self.aux.stepProcessed.emit()
 
         del tempLayer
@@ -372,7 +376,8 @@ class UtmGrid(QRunnable):
         
         self.aux.stepProcessed.emit()
 
-        QgsVectorFileWriter.writeAsVectorFormat(layer, self.output, "utf-8", None, "ESRI Shapefile")
+        if not useMemory:
+            QgsVectorFileWriter.writeAsVectorFormat(self.layer, self.output, "utf-8", None, "ESRI Shapefile")
 
         self.aux.processFinished.emit()
 
