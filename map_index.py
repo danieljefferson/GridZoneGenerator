@@ -285,6 +285,10 @@ class UtmGrid(QRunnable):
         #Creating the feature
         feature = QgsFeature()
         feature.setGeometry(poly)
+        #Fixing the problem to get MI when the base scale is not 100k
+        mi_index = '-'.join(map_index.split('-')[0:5])
+        mi = self.getMIFromINomen(mi_index)
+        #------------------------------------------------------------
         feature.setAttributes([map_index, mi])
 
         # Adding the feature into the file
